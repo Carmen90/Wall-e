@@ -1,0 +1,53 @@
+package tp.pr4.gui;
+
+import javax.swing.JButton;
+
+import tp.pr4.Place;
+
+
+
+/**
+ * @author Carmen Acosta Morales y Nerea Ramirez Lamela
+ * 
+ * Representa un lugar en la ciudad. Es un button cuyo nombre es el nombre del lugar.
+ * No modifica un lugar. 
+ * Cuando el usuario pincha en un PlaceCell el Panel mostrara una descripcion del lugar que ha sido visitado previamente
+ *
+ */
+@SuppressWarnings("serial")
+public class PlaceCell extends JButton{
+	private Place place;
+	
+	/**
+	 * Constructor without parameters 
+	 */
+	public PlaceCell (){
+		this.place = new Place();
+	}
+	
+	/**
+	 * Constructor with params
+	 * @param initialPlace
+	 */
+	public PlaceCell(Place initialPlace) {
+		// TODO Auto-generated constructor stub
+		this.place = initialPlace;
+	}
+	
+	/**
+	 * Modify the place
+	 * @param place the new place
+	 */
+	public void setPlace(Place place) {
+		this.place = place;
+	}
+	
+	/**
+	 * Gives de places
+	 * @return
+	 */
+	public Place getPlace() {
+		return place;
+	}
+
+}

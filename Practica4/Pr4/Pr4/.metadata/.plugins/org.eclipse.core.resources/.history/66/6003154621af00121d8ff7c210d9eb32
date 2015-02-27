@@ -1,0 +1,422 @@
+package tp.pr4;
+
+import java.awt.Component;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
+import java.util.EventObject;
+import java.util.Observable;
+import java.util.Scanner;
+
+import javax.swing.JComboBox;
+import javax.swing.JTextField;
+
+import tp.pr4.gui.PlaceCell;
+import tp.pr4.instructions.Instruction;
+import tp.pr4.instructions.exceptions.InstructionExecutionException;
+import tp.pr4.instructions.exceptions.WrongInstructionFormatException;
+import tp.pr4.items.ItemContainer;
+/**
+ * @author Carmen Acosta Morales y Nerea Ramirez Lamela 
+ * This class represents the robot engine. 
+ * It controls robot movements by processing the instructions introduced with the keyboard.
+ * The engine stops when the robot arrives at the space ship, runs out of fuel or receives a quit instruction.
+ * The robot engine is also responsible for updating the fuel level and the recycled material according to
+ *  the actions that the robot performs in the city.
+ * The robot engine also contains an inventory where the robot stores the items that it collects from the city
+ *
+ */
+public class RobotEngine extends Observable implements ActionListener, FocusListener{
+	private ItemContainer container;
+	private Instruction instruction;
+	private NavigationModule navega;
+	private int power;
+	private int reciclado;
+	private boolean quit = false;
+	private String jTextField;
+	private String turn;
+	private PlaceCell lugar = null;
+	private boolean navOper = false;
+	private boolean placeCell = false;
+	
+	private static 	Scanner leer = new Scanner(System.in);
+	String LINE_SEPARATOR = System.getProperty("line.separator");
+	
+	/**
+	 * Constructor without parameters 
+	 */
+	public RobotEngine (){
+		this.power = 100;
+		this.reciclado = 0;
+		this.container = new ItemContainer ();
+		this.instruction = null;
+		this.turn = "RIGHT";
+	}
+	
+	/**
+	 * RobotEngine constructor
+	 * @param cityMap map of the city
+	 * @param initialPlace the first place of that map
+	 * @param direction initial direction of the robot
+	 */
+	public RobotEngine(City cityMap, Place initialPlace, Direction direction){
+		this.navega = new NavigationModule ( cityMap, initialPlace);
+		//this.lugar = new PlaceCell (initialPlace);
+		this.power = 100;
+		this.reciclado = 0;
+		this.container = new ItemContainer ();
+		this.instruction = null;
+		this.turn = "RIGHT";
+	}
+	
+	/**
+	 * RobotEngine constructor
+	 * @param initialPlace the first place of that map
+	 * @param direction initial direction of the robot
+	 * @param cityMap map of the city
+	 */
+	public RobotEngine ( Place initialPlace, Direction direction,City cityMap ){
+		this.navega = new NavigationModule ( cityMap, initialPlace);
+		this.lugar = new PlaceCell (initialPlace);
+		this.power = 100;
+		this.reciclado = 0;
+		this.container = new ItemContainer ();
+		this.instruction = null;
+		this.turn = "RIGHT";
+	}
+	
+	/**
+	 * It starts the robot engine. Basically, it reads a line,
+	 *  the interpreter generates the corresponding instruction and executes it. 
+	 * The simulation finishes when the robot arrives at the space ship, 
+	 * the user types "QUIT", or the robot runs out of fuel
+	 */
+	public void startEngine(){
+		String linea;
+		
+		System.out.print(this.navega.getInitialPlace().toString());
+		System.out.println ( "WALLÂ·E is looking at direction " + this.navega.getCurrentHeading());
+		System.out.println (this.printRobotState());
+		
+		while ( !this.quit && !this.navega.getInitialPlace().isSpaceship() && this.power > 0 ){ 
+			System.out.print("WALLÂ·E> ");
+			linea = leer.nextLine();
+				
+			try {
+				this.instruction = Interpreter.generateInstruction (linea);
+			} 
+			catch (WrongInstructionFormatException e) {
+				
+			} 
+			this.communicateRobot(instruction);
+			
+				
+			if (this.navega.getInitialPlace().isSpaceship()){
+				System.out.println ( "WALLÂ·E says: I am at my spaceship. Bye bye");
+				System.exit(0);
+			}	
+			if ( power == 0){
+				System.out.println ("WALLÂ·E says: I run out of fuel. I cannot move. Shutting down...");
+				System.exit(0);
+			}
+		}
+		System.exit(0);
+	}
+	
+	
+
+	/**
+	 * Prints the information about all possible instructions
+	 */
+	public void requestHelp(){
+		System.out.println ( Interpreter.interpreterHelp());
+	}
+	
+	/**
+	 * Adds an amount of fuel to the robot (it can be negative)
+	 * @param fuel: fuel - Amount of fuel added to the robot
+	 */
+	public void addFuel(int fuel){
+		this.power += fuel;
+		if(this.power<0){
+			this.power=0;
+		}
+	}
+	
+	/**
+	 * Increases the amount of recycled material of the robot
+	 * @param weight  - Amount of recycled material
+	 */
+	public void addRecycledMaterial(int weight){
+		this.reciclado += weight;
+	}
+	
+	/**
+	 * Gives the racycled material of the robot
+	 * @return recycledMaterial
+	 */
+	public int getRecycledMaterial(){
+		return this.reciclado;
+	}
+
+	/**
+	 * Modify the recycled material
+	 * @param reciclado the new value of the recycled material
+	 */
+	public void setReciclado( int reciclado) {
+		// TODO Auto-generated method stub
+		this.reciclado = reciclado;
+	}
+	/**
+	 * 
+	 * @return is navigation operation?
+	 */
+	public boolean isNavOper() {
+		return navOper;
+	}
+
+	/**
+	 * Modify the power of the robot
+	 * @param power of the robot
+	 */
+	public void setFuel(int power) {
+		this.power = power;
+	}
+	
+	/**
+	 * Gives the place given for a PlaceCell action
+	 * @return lugar the last place given
+	 */
+	public PlaceCell getLugar() {
+		return lugar;
+	}
+	
+	/**
+	 * It executes an instruction.
+	 * The instruction must be configured with the context before executing it.
+	 * it controls the end of the simulation.
+	 * If the execution of the instruction throws an exception,
+	 * then the corresponding message is printed
+	 * Just for console
+	 */
+	public void communicateRobot(Instruction c) {
+		 c.configureContext(this,this.navega,this.container);
+		 try{
+			 c.execute();
+			// informarObservadores();
+		 }catch(InstructionExecutionException e){
+			 e.toString();
+		 }
+	}
+	
+	/**
+	 * It executes an instruction.
+	 * The instruction must be configured with the context before executing it.
+	 * It controls the end of the simulation.
+	 * If the execution of the instruction throws an exception,
+	 * then the corresponding message is printed
+	 * Just for swing
+	 */
+	public void communicateRobotVista(Instruction c) {
+		 c.configureContext(this,this.navega,this.container);
+		 try{
+			 c.executeVista();
+			 informarObservadores();
+		 }catch(InstructionExecutionException e){
+			 e.toString();
+		 }
+	}
+	
+	/**
+	 * Requests the end of the simulation
+	 */
+	public void requestQuit(){
+		this.quit = true;
+	}
+	
+	/**
+	 * Prints the state of the robot
+	 */
+	public String printRobotState(){
+		return ("      * My power is " + this.power + LINE_SEPARATOR + "      * My reclycled material is " + this.reciclado);
+	}
+
+	/**
+	 * Its returns the power of the robot
+	 * @return power
+	 */
+	public int getFuel() {
+		return this.power;
+	}
+	
+	/**
+	 * It returns robot navigation features.
+	 * @return navigation features
+	 */
+	public NavigationModule getNavega() {
+		return navega;
+	}
+	
+	/**
+	 * Returns true if the instruction is quit
+	 * @return
+	 */
+	public boolean isQuit() {
+		return quit;
+	}
+	
+	/**
+	 * Modify the quit instruction
+	 * @param quit
+	 */
+	public void setQuit(boolean quit) {
+		this.quit = quit;
+	}
+	
+	/**
+	 * Returns the container of the robot 
+	 * @return
+	 */
+	public ItemContainer getContainer() {
+		return container;
+	}
+	
+	/**
+	 * Informa de si se ha pulsado un lugar
+	 * @return
+	 */
+	public boolean isPlaceCell() {
+		return placeCell;
+	}
+
+	/**
+	 * Notify observers about chages in the robot
+	 */
+	public void informarObservadores (){
+		this.setChanged();
+		this.notifyObservers();
+	}
+	/** 
+	 * <p> Método que se encarga dependiendo del evento de modificar o no el modelo.
+	 * 
+	 * <p> La vista se actualiará a partir de los observadores.
+	 * 
+	 * @param fuente el que ha realizado la solicitud de modificación del modelo.
+	 * @throws WrongInstructionFormatException 
+	 */
+	private void cambiarModelo (Component fuente) throws WrongInstructionFormatException {
+		if ( this.power > 0){
+			if ( fuente.getName().equals("jButtonMove")){
+				this.navOper = true;
+				this.instruction = Interpreter.generateInstruction("MOVE");
+				this.communicateRobotVista(instruction);
+			}
+			else if ( fuente.getName().equals("jButtonPick")){
+				if (jTextField != null){
+					//this.navOper = true;
+					this.instruction = Interpreter.generateInstruction("PICK "+ jTextField);
+					this.communicateRobotVista(instruction);
+				}
+			}
+			else if ( fuente.getName().equals("jTextItem")){
+				JTextField item = (JTextField) fuente;
+				jTextField = (String) item.getText();
+			}
+			else if ( fuente.getName().equals("jButtonOperate")){
+				if (jTextField != null){
+					this.instruction = Interpreter.generateInstruction("OPERATE "+ jTextField);
+					this.communicateRobotVista(instruction);
+				} 
+			}
+			else if  ( fuente.getName().equals("jButtonDrop")){
+				if (jTextField != null){
+					this.instruction = Interpreter.generateInstruction("DROP "+ jTextField);
+					this.communicateRobotVista(instruction);
+				} 
+			}
+			else if ( fuente.getName().equals("jButtonTurn")){
+				if ( this.turn.equalsIgnoreCase("left")){
+					this.instruction = Interpreter.generateInstruction("TURN "+ turn);
+					this.communicateRobotVista(instruction);
+				}
+				else {
+					this.instruction = Interpreter.generateInstruction("TURN "+ turn);
+					this.communicateRobotVista(instruction);
+				}	
+			}
+			else if (fuente.getName().equals("comboTurn")){
+				@SuppressWarnings("rawtypes")
+				JComboBox gira = (JComboBox) fuente;
+				this.turn =  (String)gira.getSelectedItem();
+			}
+			else if (fuente.getName().equals("jButtonQuit")){	
+				this.quit = true;
+				informarObservadores ();
+				this.instruction = Interpreter.generateInstruction("QUIT");
+				this.communicateRobotVista(instruction);
+			}	
+			else if ( fuente.getName().equals("placeCell")){
+			//	this.navOper = true;
+				PlaceCell place = (PlaceCell) fuente;
+				this.lugar = place;
+				this.placeCell = true;
+				informarObservadores ();
+				
+			}
+		}
+		else{
+			if ( fuente.getName().equals("jButtonOperate")){
+				if (jTextField != null){
+					this.instruction = Interpreter.generateInstruction("OPERATE "+ jTextField);
+					this.communicateRobotVista(instruction);
+				} 
+			}
+		}
+		this.navOper = false;
+		this.placeCell = false;
+    }
+	
+
+
+	/**
+	 * Método para tratar los eventos de forma genérica. 
+	 * Se encarga tanto de solicitar la modificación al modelo como de informar a la vista
+	 * @param e el evento a tratar
+	 */
+	private void trataEventoGenerico(EventObject event){
+		Component fuente = (Component) event.getSource(); // el que generó el evento
+		try {
+			cambiarModelo(fuente);
+		} catch (WrongInstructionFormatException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}	
+	
+	/**
+	 * Se tratan los eventos del tipo <code>ActionEvent</code> informando cuando es necesario a la vista y al modelo.
+	 */
+	@Override
+	public void actionPerformed(ActionEvent ae) {
+	    trataEventoGenerico(ae);
+	}
+	
+	/**
+	 * Se tratan los eventos del tipo <code>FocusEvent</code> informando cuando se gana el foco a la vista y al modelo.
+	 */
+	@Override
+	public void focusGained(FocusEvent arg0) {
+		// TODO Auto-generated method stub
+		
+	}
+	/**
+	 * Se tratan los eventos del tipo <code>FocusEvent</code> informando cuando se pierde el foco a la vista y al modelo.
+	 */
+	@Override
+	public void focusLost(FocusEvent arg0) {
+		// TODO Auto-generated method stub
+		trataEventoGenerico(arg0);
+	}
+
+}

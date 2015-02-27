@@ -1,0 +1,158 @@
+package tp.pr4;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import org.apache.commons.cli.BasicParser;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+
+import tp.pr4.cityLoader.CityLoaderFromTxtFile;
+import tp.pr4.cityLoader.cityLoaderExceptions.WrongCityFormatException;
+import tp.pr4.gui.MainWindow;
+
+/**
+ * 
+ * @author Carmen Acosta Morales y Nerea Ramirez Lamela
+ *
+ */
+public class Main {
+
+	public static void main(String[] args) {
+		FileInputStream file = null;
+		boolean consola = false;
+		boolean interfaz = false;
+		String archivo = null;
+		String tipo = null;
+		CommandLineParser parser = new BasicParser();
+		
+		Options opcion = new Options();
+		opcion.addOption("h", false, "Show this help message");
+		//  opcion.addOption("h", "help", false, "el mensaje de ayuda");
+		opcion.addOption("m", "map", true, "File with the description of the city");
+		opcion.addOption("i", "interface", true, "The type of interface: console or swing");
+		  
+		  
+
+		try{
+			CommandLine linea = parser.parse( opcion, args);
+			  
+			if ( linea.hasOption('h')){
+				System.out.println("Execute this assignment with these parameters:");
+			    System.out.println("usage: tp.pr4.Main [-h] [-i <type>] [-m <mapfile>]");
+			    System.out.println(" -h,--help               Shows this help message");
+			    System.out.println(" -i,--interface <type>   The type of interface: console or swing");
+			    System.out.println(" -m,--map <mapfile>      File with the description of the city")
+			}
+			if ( linea.hasOption('m')){
+				archivo = linea.getOptionValue('m');
+				//consola = true;  
+			}
+			if (linea.hasOption('i')){
+				linea.getOptionValue('i');  
+				tipo = linea.getOptionValue('i');
+				if ( tipo.equalsIgnoreCase("Console")){
+					consola = true;
+				}else if (tipo.equalsIgnoreCase("swing")){
+					interfaz = true;
+				}
+				
+			}
+		}
+		catch(ParseException e){
+			System.err.println (  "Parsing Error Motivo:."  + e.getMessage ()  );			
+			System.exit(1);
+		}
+			 
+		if ( archivo != null){
+			if (archivo.length() != 1){
+			
+			CityLoaderFromTxtFile city = new CityLoaderFromTxtFile();
+			  
+				if ( consola || interfaz){
+					File f = new File (archivo);
+					 
+					try {
+						file = new FileInputStream (f);
+					} catch (FileNotFoundException e) {
+						// TODO Auto-generated catch block
+						System.err.println ("Error reading the map file: noExiste.txt (No existe el fichero o el directorio)");
+						System.exit(2);
+					}
+					 
+					RobotEngine engine;
+					//System.exit(0);
+					try {
+						engine = new RobotEngine(city.loadCity(file), city.getInitialPlace(), Direction.NORTH);
+						if ( consola){
+							engine.startEngine();						 
+						}
+						else if ( interfaz){
+							MainWindow mainWin;
+								 
+							mainWin = new MainWindow (engine);
+							engine.addObserver(mainWin);
+							mainWin.arranca();
+							//System.exit(0);
+						}
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						//e.printStackTrace();
+						System.err.println ("Error reading the map file: noExiste.txt (No existe el fichero o el directorio)");
+						System.exit(2);
+					}	 
+				 }
+			}
+			else{
+				System.err.println("Bad params."+ LINE_SEPARATOR +"Usage: java tp.pr3.Main <mapfile>" + LINE_SEPARATOR +  LINE_SEPARATOR +"<mapfile> : file with the description of the city.");
+				System.exit(1);
+			}
+		}
+		else{
+			System.err.println("Map file not specified");
+			System.exit(1);
+		}
+		
+		/*if ( args.length == 1){
+			CityLoaderFromTxtFile city = new CityLoaderFromTxtFile(); 
+			
+			File f = new File(args[0]); 
+			try {
+				file = new FileInputStream(f);
+				
+			} catch (FileNotFoundException e) {
+				// TODO Auto-generated catch block
+				System.err.println ("Error reading the map file: noExiste.txt (No existe el fichero o el directorio)");
+				System.exit(2);
+			}
+
+			RobotEngine engine;
+			MainWindow mainWin;
+			try {
+				
+				engine = new RobotEngine(city.loadCity(file), city.getInitialPlace(), Direction.NORTH);
+				
+				mainWin = new MainWindow (engine);
+				engine.addObserver(mainWin);
+				mainWin.arranca();
+				//engine.startEngine();
+				
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+				System.err.println ("Error reading the map file: noExiste.txt (No existe el fichero o el directorio)");
+				System.exit(2);
+			}
+		}
+		else{
+			System.err.println("Bad params."+ LINE_SEPARATOR +"Usage: java tp.pr3.Main <mapfile>" + LINE_SEPARATOR +  LINE_SEPARATOR +"<mapfile> : file with the description of the city.");
+			System.exit(1);
+		}*/
+	}
+	static String LINE_SEPARATOR = System.getProperty("line.separator");
+	
+}

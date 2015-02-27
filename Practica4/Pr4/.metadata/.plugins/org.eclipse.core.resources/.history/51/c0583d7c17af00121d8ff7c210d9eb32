@@ -1,0 +1,25 @@
+package tp.pr4.items;
+
+import tp.pr4.NavigationModule;
+import tp.pr4.RobotEngine;
+
+public class ItemGeneric extends Item{
+
+	public ItemGeneric(String id, String description) {
+		super(id, description);
+		// TODO Auto-generated constructor stub
+	}
+
+	//@Override
+	public boolean use(RobotEngine r, NavigationModule nav) {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+	//@Override
+	public boolean canBeUsed() {
+		// TODO Auto-generated method stub
+		return false;
+	}
+
+}

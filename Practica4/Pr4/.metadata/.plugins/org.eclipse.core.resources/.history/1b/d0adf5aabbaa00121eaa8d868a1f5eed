@@ -1,0 +1,72 @@
+package tp.pr4;
+/**
+ * @author Carmen Acosta Morales y Nerea Ramirez Lamela
+ * An enumerated type that represents the compass directions
+ *  (north, east, south and west) plus a value that represents an unknown direction.
+ *
+ */
+public enum Direction {
+	EAST, NORTH, WEST, SOUTH, UNKNOWN;
+	
+	public Direction dirOpuesta (Direction dir){
+		Direction dirOpuesta = Direction.UNKNOWN;
+		
+		if(dir == Direction.NORTH ){
+			dirOpuesta=Direction.SOUTH;
+			
+		}else if(dir==Direction.SOUTH){
+			dirOpuesta=Direction.NORTH;
+			
+		}else if(dir== Direction.EAST){
+			dirOpuesta= Direction.WEST;
+		
+		}else if(dir== Direction.WEST){
+			dirOpuesta= Direction.EAST;
+		
+		}else
+		{
+			dirOpuesta=Direction.UNKNOWN;
+		}
+		
+		return dirOpuesta;
+	}
+	
+	/**
+	 * Updates the current direction according to the rotation
+	 * @param rotation
+	 */
+	public Direction rotate (Rotation rotation){
+		Direction direction = UNKNOWN;
+		if ( rotation == Rotation.LEFT) {
+			if ( this == Direction.EAST){
+				direction = NORTH;
+			}
+			else if ( this == Direction.NORTH ){
+				direction = WEST;
+			}
+			else if ( this == Direction.WEST){
+				direction = SOUTH;
+			}
+			else if ( this == Direction.SOUTH){
+				direction = EAST;
+			}
+		}else if (rotation == Rotation.RIGHT){
+			if ( this == Direction.EAST){
+				direction = SOUTH;
+			}
+			else if ( this == Direction.NORTH ){
+				direction = EAST;
+			}
+			else if ( this == Direction.WEST){
+				direction = NORTH;
+			}
+			else if ( this == Direction.SOUTH){
+				direction = WEST;
+			}
+			else {
+				direction = UNKNOWN;
+			}
+		}
+		return direction;
+	}
+}

@@ -1,0 +1,138 @@
+package tp.pr4.gui;
+
+import java.awt.BorderLayout;
+import java.awt.Container;
+import java.awt.EventQueue;
+import java.util.EventListener;
+import java.util.Observable;
+import java.util.Observer;
+
+import javax.swing.JFrame;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JOptionPane;
+import javax.swing.JSplitPane;
+
+import tp.pr4.RobotEngine;
+
+/**
+ * @author Carmen Acosta Morales y Nerea Ramirez Lamela
+ * 
+ * Esta clase tiene los siguientes elementos:
+ * Un panel de acciones con button que implementan MOVE, TURN, OPERATE, PICK y DROP. 
+ * Además tiene un combo box con las posibles rotation de la acción TURN y un textField para escribir el nombre dle item que queremos
+ *  que coja del lugar actual.
+ * Un RobotPanel que muestra la información del robot y su inventario ( una tabla con los nombres de los items y sus descripciones)
+ * El usuario podrá seleccionar un item del inventario para ejecutar DROP u OPERATE con el.
+ * Un CityPanel que representa la ciudad. Muestra los lugares que el robot ha visitado y un icono que representa donde esta mirando walle.
+ * El icono de walle será actualizado cada vez que se ejecute la instruccion TURN. Los lugares visibles serán actualizados cuando el robot
+ * ejecute la instrucción MOVE.
+ *
+ */
+@SuppressWarnings("serial")
+public class MainWindow extends JFrame implements Observer{
+	private NavigationPanel navigPanel;
+	private Container panel;
+	private RobotPanel robotPanel;
+	private JSplitPane splitPane;
+	private JMenu jMenu;
+	private JMenuBar jMenuBar;
+	private ButtonPanel buttonPanel;
+	private RobotEngine robot;
+	
+	public MainWindow (){
+		super ("MainWindow");
+		initPanel();
+		
+	}
+	
+	public MainWindow(RobotEngine robot){
+		super ("MainWindow");
+		this.robot = robot;
+		initPanel();
+		fijarControlador(robot);
+	}
+	
+
+
+	/**
+	 * El splitPane se encarga de meter en un mismo panel con una separación movil el panel de 
+	 * las instrucciones y el panel de la inromación del robot
+	 */
+	public void superPanel (){
+		//Create a split pane with the two scroll panes in it.
+	    this.buttonPanel = new ButtonPanel ();
+		splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, this.buttonPanel, this.robotPanel);
+		splitPane.setDividerLocation(275);
+	}
+	
+	/**
+	 * Inicializamos todo el panel de la MainWindow
+	 */
+	public void initPanel(){
+	    this.setSize(3*320, 340);
+	    this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    this.panel = this.getContentPane();
+	    this.robotPanel = new RobotPanel();
+	    this.navigPanel= new NavigationPanel(robot);
+	    this.jMenu = new JMenu("File");
+	    this.jMenuBar = new JMenuBar ();
+
+	   
+	    this.superPanel();
+	    
+	    this.jMenu.add(new JMenu ("Quit"));
+	    this.jMenu.add(new JMenu ("Help"));
+	    
+	    this.setJMenuBar(jMenuBar);
+	    this.jMenuBar.add(jMenu);
+	    
+	    this.panel.add(splitPane, BorderLayout.NORTH);
+	    this.panel.add(this.navigPanel, BorderLayout.CENTER);
+	    
+	    this.update(robot, null);
+	  
+	    this.pack();
+		}
+	 
+	/**
+	 * Método que se encarga de arrancar la vista de la interfaz
+	 */
+	public void arranca(){
+       EventQueue.invokeLater(new Runnable(){
+       	public void run() {
+       		setVisible(true);
+       	}
+       });		
+	}
+	
+	/**
+	 * Método que se encarga de actualizar RobotPanel y NavigationPanel
+	 */
+	public void update(Observable arg0, Object arg1) {
+		this.robotPanel.update(arg0, arg1);
+		this.navigPanel.update(arg0,arg1);
+		if ( this.robot.isQuit()){
+			this.updateQuit();
+		}	
+	}
+	
+	public void updateQuit (){
+		if (JOptionPane.showConfirmDialog(null, "Would you like to quit the game?") == 0){
+			System.exit(1);				
+		}
+		else {
+			this.robot.setQuit(false);
+		}
+	}
+	
+	/**
+    * Método que se encarga de fijar el controlador en los elementos del panel de forma adecuada
+    * @param controlador contiene el controlador encargado del panel. Tiene que escuchar ActionListener y FocusListener.
+    */
+	public void fijarControlador(EventListener controlador){
+		this.buttonPanel.fijarControlador(controlador);
+		//this.navigPanel.fijarControlador(controlador);
+	}
+	
+}

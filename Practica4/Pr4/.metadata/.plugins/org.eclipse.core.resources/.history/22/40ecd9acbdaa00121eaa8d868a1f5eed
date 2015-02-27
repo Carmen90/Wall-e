@@ -1,0 +1,85 @@
+package tp.pr4.instructions;
+import tp.pr4.RobotEngine;
+import tp.pr4.NavigationModule;
+import tp.pr4.instructions.exceptions.InstructionExecutionException;
+import tp.pr4.instructions.exceptions.WrongInstructionFormatException;
+import tp.pr4.items.ItemContainer;
+/**
+ * @author Carmen Acosta Morales y Nerea Ramirez Lamela 
+ * Shows the game help with all the instructions that the robot can execute.
+ *  This instruction works if the user writes HELP or AYUDA
+ *
+ */
+public class HelpInstruction implements Instruction{
+	private RobotEngine robot;
+	
+	/**
+	 * Default constructor
+	 */
+	public HelpInstruction (){
+		this.robot = new RobotEngine ();
+	}
+	
+	/**
+	 * Set the execution context. The method receives the entire engine (engine, navigation and the robot container)
+	 *  even though the actual implementation of execute() may not require it.
+	 * @param engine
+	 * @param navigation
+	 * @param robotContainer
+	 */
+	public void configureContext(RobotEngine engine,
+        NavigationModule navigation,
+        ItemContainer robotContainer){
+		this.robot = engine;
+		
+	}
+	/**
+	*Prints the help string of every instruction. It delegates to the Interpreter class.
+	*@throws: InstructionExecutionException - if there exist any execution error.
+	*/
+	@Override
+	public void execute() 
+			throws InstructionExecutionException{
+		// TODO Auto-generated method stub
+		this.robot.requestHelp();
+	}
+	/** Returns a description of the Instruction help. 
+	 * The string does not end with the line separator.
+	 *  It is up to the caller adding it before printing.
+	 * @return
+	 */
+	@Override
+	public String getHelp() {
+		// TODO Auto-generated method stub
+		return "HELP|AYUDA";
+	}
+	/**
+	 * Parses the String returning a HelpInstruction instance or throwing a WrongInstructionFormatException()
+	 * @param cad
+	 * @return Instruction Reference to an instance of HelpInstruction
+	 * @throws WrongInstructionFormatException
+	 */
+	@Override
+	public Instruction parse(java.lang.String cad) 
+			throws WrongInstructionFormatException{
+		cad = cad.trim();//elimina los espacios en blanco.
+		
+		String [] cadena = cad.split(" ");/*Divide la cadena en espacios
+		y guarda cada fragmento en cada posici�n del array*/
+		// TODO Auto-generated method stub
+		if(!cadena[0].equalsIgnoreCase("HELP") && !cadena[0].equalsIgnoreCase("AYUDA") 
+				|| cadena.length > 1)
+		{
+			throw new WrongInstructionFormatException();
+		}
+		else {
+			return this;
+		}
+	}
+
+	@Override
+	public void executeVista() throws InstructionExecutionException {
+		// TODO Auto-generated method stub
+		this.execute();
+	}	
+}
